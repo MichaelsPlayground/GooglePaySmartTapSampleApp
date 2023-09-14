@@ -147,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
       this.stopCommand(descriptiveText);
     } catch (Exception e) {
       // Something went wrong...
+      e.printStackTrace();
       descriptiveText
           .append("\n\nError: ")
           .append(e);

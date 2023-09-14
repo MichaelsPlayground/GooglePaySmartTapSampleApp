@@ -280,6 +280,9 @@ class GetDataResponse {
                 // Get the Smart Tap redemption value
                 decryptedSmartTapRedemptionValue = new String(
                     Arrays.copyOfRange(loyalty.getPayload(), 1, loyalty.getPayload().length));
+                // the 'elseif' is new to read the PassKit NFC Test Pass as well
+              } else if (Arrays.equals(serviceRecord.getType(), new byte[]{(byte) 103, (byte) 114})) {
+                processGenericServiceRecord(serviceRecord);
               }
             }
           }
@@ -287,6 +290,22 @@ class GetDataResponse {
       }
     }
   }
+
+  // added, see https://stackoverflow.com/questions/77100896/generate-and-read-nfc-smart-tap-generic-pass-in-google-wallet
+  private void processGenericServiceRecord(NdefRecord serviceRecord) throws FormatException {
+    //in case of general pass `gr` type
+    // Get the generic record payload
+    NdefMessage genericRecordPayload = new NdefMessage(serviceRecord.getPayload());
+    for (NdefRecord generic : genericRecordPayload.getRecords()) {
+      // Check for `n` ID = 6e
+      if (Arrays.equals(generic.getId(), new byte[]{(byte) 0x6e})) {
+        // Get the Smart Tap redemption value
+        decryptedSmartTapRedemptionValue = new String(Arrays.copyOfRange(generic.getPayload(), 1, generic.getPayload().length));
+      }
+    }
+  }
+
+
 
   /**
    * Gets the record bundle NDEF record
