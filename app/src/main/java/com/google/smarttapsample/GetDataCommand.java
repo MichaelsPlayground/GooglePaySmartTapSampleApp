@@ -98,9 +98,9 @@ class GetDataCommand {
         new byte[]{(byte) 0x73, (byte) 0x74, (byte) 0x72}, // `str` in byte-array form
         null,
         // original setting:
-        // new byte[]{SERVICE_TYPE_Loyalty_Cards});
+        new byte[]{SERVICE_TYPE_Loyalty_Cards});
         // this is new, see: https://stackoverflow.com/questions/77100896/generate-and-read-nfc-smart-tap-generic-pass-in-google-wallet
-        new byte[]{SERVICE_TYPE_Generic_Cards});
+        // new byte[]{SERVICE_TYPE_Generic_Cards});
     NdefMessage serviceListRecordPayload = new NdefMessage(serviceTypeRecord);
 
     // Return the service list NDEF record

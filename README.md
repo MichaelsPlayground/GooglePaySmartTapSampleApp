@@ -187,6 +187,36 @@ And now reading the pass works correctly!
 Q: Did you change the LONG_TERM_PRIVATE_KEY field to your own as well or just the Collector ID?
 A: Hi, I changed both, and also the key version that was hardcoded somewhere. I found the issue, i'll post a comment as soon as I have a few minutes for that! thanks for the help
 
+Hi Michael, in order to read the pass from the link, you have to keep the service type to loyalty cards 
+(pskt cards are loyalty cards). Other than that, if you click on the three dots of the pass (on your phone), 
+you will see collector id and private key. Use the PrivKey in Utils class (replace the one there) and convert 
+your decimal value of the collector ID to a byte array, then the code should work!
+
+NegotiateCryptoCommand
+old value of collector id: 
+// Collector ID is hardcoded to `20180608` for this sample app
+// static final byte[] COLLECTOR_ID = new byte[]{(byte) 0x01, (byte) 0x33, (byte) 0xEE, (byte) 0x80};
+// see https://www.scadacore.com/tools/programming-calculators/online-hex-converter/
+// using 0133ee80 gives:
+// INT32 - Big Endian (ABCD) 20180608
+
+Collector id 13380028
+
+Private Key
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEID0VR/I814rQUqWIYPEhno+3kexN/jN2n1ub+mJ6ZWyhoAoGCCqGSM49
+AwEHoUQDQgAEwKMBv29ByaSLiGF0FctuyB+Hs2oZ1kDIYhTVllPexNGudAlm8IWO
+H0e+Exc97/zBdawu7Yl+XytQONszGzAK7w==
+-----END EC PRIVATE KEY-----
+
+Public key
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEwKMBv29ByaSLiGF0FctuyB+Hs2oZ
+1kDIYhTVllPexNGudAlm8IWOH0e+Exc97/zBdawu7Yl+XytQONszGzAK7w==
+-----END PUBLIC KEY-----
+
+Payload
+2A8ZQaXyW86CBuZIH7tgVM
  ```
 
 
