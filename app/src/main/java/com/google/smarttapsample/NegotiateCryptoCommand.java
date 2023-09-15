@@ -51,12 +51,21 @@ class NegotiateCryptoCommand {
   // Collector ID is hardcoded to `20180608` for this sample app
   static final byte[] COLLECTOR_ID = new byte[]{(byte) 0x01, (byte) 0x33, (byte) 0xEE, (byte) 0x80};
 
+  // this is the COLLECTOR_ID_PASSKIT for PassKit NFC Test Pass 00cc29bc
+  static final byte[] COLLECTOR_ID_PASSKIT = new byte[]{(byte) 0x00, (byte) 0xcc, (byte) 0x29, (byte) 0xbc};
+
   // Private key is hardcoded for this sample app
   private static final String LONG_TERM_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----\n"
       + "MHcCAQEEIIJtF+UHZ7FlsOTZ4zL40dHiAiQoT7Ta8eUKAyRucHl9oAoGCCqGSM49\n"
       + "AwEHoUQDQgAEchyXj869zfmKhRi9xP7f2AK07kEo4lE7ZlWTN14jh4YBTny+hRGR\n"
       + "XcUzevV9zSSPJlPHpqqu5pEwlv1xyFvE1w==\n"
       + "-----END EC PRIVATE KEY-----\n";
+
+  private static final String LONG_TERM_PRIVATE_KEY_PASSKIT = "-----BEGIN EC PRIVATE KEY-----\n"
+          + "MHcCAQEEID0VR/I814rQUqWIYPEhno+3kexN/jN2n1ub+mJ6ZWyhoAoGCCqGSM49\n"
+          + "AwEHoUQDQgAEwKMBv29ByaSLiGF0FctuyB+Hs2oZ1kDIYhTVllPexNGudAlm8IWO\n"
+          + "H0e+Exc97/zBdawu7Yl+XytQONszGzAK7w==\n"
+          + "-----END EC PRIVATE KEY-----\n";
 
   // Private key version is hardcoded to 1 for this sample app
   private static final byte[] LONG_TERM_PRIVATE_KEY_VERSION = new byte[]{(byte) 0x00, (byte) 0x00,
@@ -83,9 +92,25 @@ class NegotiateCryptoCommand {
   NegotiateCryptoCommand(byte[] mobileDeviceNonce) throws Exception {
     try {
       // Create the needed NDEF records
+/*
+      // convert int to byte[]
+      int i_1 = 20180608;
+      byte[] COLLECTOR_ID_1 = new byte[]{(byte) 0x01, (byte) 0x33, (byte) 0xEE, (byte) 0x80};
+      System.out.println("*** CONVERT int to BYTE[]");
+      System.out.println("i_1: " + i_1 + " gives " + printData("COLLECTOR_ID_1", COLLECTOR_ID_1));
+      byte[] COLLECTOR_ID_1C = intTo4ByteArray(i_1);
+      System.out.println("i_1: " + i_1 + " gives " + printData("COLLECTOR_IDC1", COLLECTOR_ID_1C));
+      int i_2 = 13380028;
+      byte[] COLLECTOR_ID_2 = new byte[]{(byte) 0x01, (byte) 0x33, (byte) 0xEE, (byte) 0x80};
+      System.out.println("*** CONVERT int to BYTE[]");
+      byte[] COLLECTOR_ID_2C = intTo4ByteArray(i_2);
+      System.out.println("i_1: " + i_1 + " gives " + printData("COLLECTOR_IDC2", COLLECTOR_ID_2C));
+*/
+
       NdefRecord sessionRecord = createSessionRecord();
       NdefRecord signatureRecord = createSignatureRecord(mobileDeviceNonce);
-      createCollectorIdRecord();
+      createCollectorIdRecord(); // ### google test loyalty pass
+      //createCollectorIdRecordPasskit(); // ### passkit
       NdefRecord cryptoParamsRecord = createCryptoParamsRecord(signatureRecord);
       createNegotiateCryptoRecord(sessionRecord, cryptoParamsRecord);
     } catch (Exception e) {
@@ -143,6 +168,16 @@ class NegotiateCryptoCommand {
             COLLECTOR_ID));
   }
 
+  private void createCollectorIdRecordPasskit() throws IOException {
+    collectorIdRecord = new NdefRecord(
+            NdefRecord.TNF_EXTERNAL_TYPE,
+            new byte[]{(byte) 0x63, (byte) 0x6c, (byte) 0x64}, // `cld` in byte-array form
+            null,
+            Utils.concatenateByteArrays(
+                    new byte[]{(byte) 0x04}, // Payload format byte
+                    COLLECTOR_ID_PASSKIT));
+  }
+
   /**
    * Creates the signature NDEF record
    *
@@ -162,7 +197,8 @@ class NegotiateCryptoCommand {
     getCompressedPublicKeyAndNonce();
 
     // Generate a signed mobile device nonce
-    byte[] signedData = generateSignature(mobileDeviceNonce);
+    byte[] signedData = generateSignature(mobileDeviceNonce); // ### Google Loyalty pass
+    //byte[] signedData = generateSignaturePasskit(mobileDeviceNonce); // ### PassKit NFC Test Pass
 
     return new NdefRecord(
         NdefRecord.TNF_EXTERNAL_TYPE,
@@ -205,6 +241,34 @@ class NegotiateCryptoCommand {
     return Utils.concatenateByteArrays(
         new byte[]{(byte) 0x04}, // Payload format byte
         signedData);
+  }
+
+  private byte[] generateSignaturePasskit2(byte[] mobileDeviceNonce)
+          throws NoSuchAlgorithmException, IOException, InvalidKeyException, SignatureException {
+
+    Signature signature = Signature.getInstance("SHA256withECDSA");
+
+    // Read in the private key
+    // Normally this would be from secure storage
+    Reader rdr = new StringReader(LONG_TERM_PRIVATE_KEY_PASSKIT);
+    Object parsed = new PEMParser(rdr).readObject();
+
+    // Generate the key pair
+    KeyPair pair;
+    pair = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair) parsed);
+    PrivateKey signingKey = pair.getPrivate();
+
+    // Generate the signature
+    signature.initSign(signingKey);
+    signature.update(terminalNonce);
+    signature.update(mobileDeviceNonce);
+    signature.update(COLLECTOR_ID_PASSKIT);
+    signature.update(terminalEphemeralPublicKeyCompressed);
+
+    signedData = signature.sign();
+    return Utils.concatenateByteArrays(
+            new byte[]{(byte) 0x04}, // Payload format byte
+            signedData);
   }
 
   /**
@@ -278,5 +342,46 @@ class NegotiateCryptoCommand {
       throw new SmartTapException(
           "Problem turning `negotiate secure smart tap sessions` command to byte array: " + e);
     }
+  }
+
+  /**
+   * Returns a byte array with length = 4
+   * @param value
+   * @return
+   */
+  public static byte[] intTo4ByteArray(int value) {
+    return new byte[]{
+            (byte) (value >>> 24),
+            (byte) (value >>> 16),
+            (byte) (value >>> 8),
+            (byte) value};
+  }
+
+  public static String printData(String dataName, byte[] data) {
+    int dataLength;
+    String dataString = "";
+    if (data == null) {
+      dataLength = 0;
+      dataString = "IS NULL";
+    } else {
+      dataLength = data.length;
+      dataString = bytesToHex(data);
+    }
+    StringBuilder sb = new StringBuilder();
+    sb
+            .append(dataName)
+            .append(" length: ")
+            .append(dataLength)
+            .append(" data: ")
+            .append(dataString);
+    return sb.toString();
+  }
+
+  public static String bytesToHex(byte[] bytes) {
+    if (bytes == null) return "";
+    StringBuffer result = new StringBuffer();
+    for (byte b : bytes)
+      result.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
+    return result.toString();
   }
 }

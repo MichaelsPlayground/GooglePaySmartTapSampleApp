@@ -343,6 +343,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
     byte[] response = isoDep.transceive(getDataCommand.commandToByteArray());
 
+
     GetDataResponse getDataResponse = new GetDataResponse(
         response,
         negotiateCryptoResponse.mobileDeviceEphemeralPublicKey,
@@ -352,6 +353,20 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         negotiateCryptoCommand.terminalEphemeralPublicKeyCompressed,
         negotiateCryptoCommand.signedData,
         selectSmartTapResponse.mobileDeviceNonce);
+
+
+    /*
+    // ### this is for PassKit data
+    GetDataResponse getDataResponse = new GetDataResponse(
+            response,
+            negotiateCryptoResponse.mobileDeviceEphemeralPublicKey,
+            negotiateCryptoCommand.terminalEphemeralPrivateKey,
+            negotiateCryptoCommand.terminalNonce,
+            NegotiateCryptoCommand.COLLECTOR_ID_PASSKIT,
+            negotiateCryptoCommand.terminalEphemeralPublicKeyCompressed,
+            negotiateCryptoCommand.signedData,
+            selectSmartTapResponse.mobileDeviceNonce);
+*/
 
     descriptiveText.append("\n----\nSent `get smart tap data` command...");
 

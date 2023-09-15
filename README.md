@@ -192,7 +192,35 @@ Hi Michael, in order to read the pass from the link, you have to keep the servic
 you will see collector id and private key. Use the PrivKey in Utils class (replace the one there) and convert 
 your decimal value of the collector ID to a byte array, then the code should work!
 
-NegotiateCryptoCommand
+Changes in:
+MainActivity.java: lines 347ff
+GetDataResponse getDataResponse = new GetDataResponse(...
+change CollectorId
+
+NegotiateCryptoCommand.java 
+lines 50..
+change CollectorId and private static final String LONG_TERM_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----\n"
+
+lines 90...
+NegotiateCryptoCommand(byte[] mobileDeviceNonce) throws Exception {
+change createCollectorIdRecord(); /
+
+lines 161...
+private void createCollectorIdRecord() throws IOException {
+change CollectorId 
+
+line 187...
+private NdefRecord createSignatureRecord(byte[] mobileDeviceNonce)
+change byte[] signedData = generateSignature(mobileDeviceNonce); 
+to byte[] signedData = generateSignaturePasskit(mobileDeviceNonce);
+
+line 218...
+private byte[] generateSignature(byte[] mobileDeviceNonce)
+change collectorId
+signature.update(COLLECTOR_ID);
+
+
+
 old value of collector id: 
 // Collector ID is hardcoded to `20180608` for this sample app
 // static final byte[] COLLECTOR_ID = new byte[]{(byte) 0x01, (byte) 0x33, (byte) 0xEE, (byte) 0x80};
